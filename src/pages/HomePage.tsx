@@ -5,7 +5,7 @@ import { Placeholder, ProductCard } from '../components/ProductCard'
 
 // Shows the status the backend recorded (VNPAY: set by IPN). The ?vnp_* params
 // VNPAY appends on redirect are never trusted as proof of payment.
-function LastOrder() {
+export function LastOrder() {
   const { store, lastOrder, money } = useShop()
   const tracked = lastOrder?.slug === store.slug ? lastOrder : null
   const query = useQuery<Order | null>(
@@ -43,7 +43,6 @@ export function HomePage() {
           </a>
         </div>
       </section>
-      <LastOrder />
       {collections.length > 0 ? (
         <section className="section">
           <h2>Collections</h2>

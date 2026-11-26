@@ -10,7 +10,8 @@ import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { CollectionPage } from './pages/CollectionPage'
-import { HomePage } from './pages/HomePage'
+import { BuilderPage } from './pages/BuilderPage'
+import { HomePage, LastOrder as LastOrderPanel } from './pages/HomePage'
 import { ProductPage } from './pages/ProductPage'
 import './App.css'
 
@@ -106,7 +107,15 @@ function Shop({ store, onChangeStore }: { store: Store; onChangeStore?: () => vo
         {route.name === 'collection' ? <CollectionPage slug={route.slug} /> : null}
         {route.name === 'product' ? <ProductPage id={route.id} /> : null}
         {route.name === 'checkout' ? <CheckoutPage /> : null}
-        {route.name === 'home' || route.name === 'cart' ? <HomePage /> : null}
+        {route.name === 'home' || route.name === 'cart' ? (
+          <>
+            <LastOrderPanel />
+            <BuilderPage slug="home" fallback={<HomePage />} />
+          </>
+        ) : null}
+        {route.name === 'page' ? (
+          <BuilderPage key={route.slug} slug={route.slug} fallback={<p className="error center">Page not found.</p>} />
+        ) : null}
       </main>
       <Footer onChangeStore={onChangeStore} />
       <CartDrawer open={drawer} onClose={() => setDrawer(false)} />
