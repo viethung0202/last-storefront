@@ -1,4 +1,4 @@
-export type Store = { id: string; slug: string; name: string; currency: string }
+export type Store = { id: string; slug: string; name: string; currency: string; status?: 'ACTIVE' | 'SUSPENDED' }
 
 export type Collection = { id: string; name: string; slug: string }
 

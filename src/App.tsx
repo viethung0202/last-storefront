@@ -55,6 +55,19 @@ function App() {
       </main>
     )
   }
+  if (storeQuery.data.status === 'SUSPENDED') {
+    return (
+      <main className="landing">
+        <h1>{storeQuery.data.name}</h1>
+        <p>This store is temporarily closed. Please come back later.</p>
+        {changeStore ? (
+          <button type="button" className="btn" onClick={changeStore}>
+            Open another store
+          </button>
+        ) : null}
+      </main>
+    )
+  }
   // key: a different store starts with a fresh cart/discount state
   return <Shop key={storeQuery.data.id} store={storeQuery.data} onChangeStore={changeStore} />
 }
