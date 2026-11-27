@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery, apiRequest } from '../lib/api'
 import { useShop } from '../lib/shop'
 import type { Order } from '../lib/types'
@@ -7,6 +8,7 @@ import { Placeholder, ProductCard } from '../components/ProductCard'
 // VNPAY appends on redirect are never trusted as proof of payment.
 export function LastOrder() {
   const { store, lastOrder, money } = useShop()
+  const [paying, setPaying] = useState(false)
   const tracked = lastOrder?.slug === store.slug ? lastOrder : null
   const query = useQuery<Order | null>(
     ['last-order', tracked?.id],
@@ -16,16 +18,43 @@ export function LastOrder() {
   const order = query.data
   if (!order) return null
   const returned = new URLSearchParams(location.search).has('vnp_ResponseCode')
+  // several attempts can exist (retries): show the paid one, else the latest
+  const payment = order.payments.find((p) => p.status === 'SUCCEEDED') ?? order.payments[order.payments.length - 1]
+  const canRetry = order.status === 'PENDING' && order.payments.some((p) => p.method === 'VNPAY') && !order.payments.some((p) => p.status === 'SUCCEEDED')
   return (
     <section className="section last-order">
       <h2>Your last order #{order.id.slice(-6)}</h2>
       <p>
-        Total {money(order.total)} · Order {order.status} · Payment {order.payments[0]?.method} {order.payments[0]?.status}{' '}
+        Total {money(order.total)} · Order {order.status} · Payment {payment?.method} {payment?.status}{' '}
         <button type="button" className="link" onClick={() => query.refetch()}>
           Refresh
         </button>
       </p>
-      {returned && order.payments[0]?.status === 'PENDING' ? <p className="muted">Waiting for VNPAY to confirm the payment...</p> : null}
+      {returned && payment?.status === 'PENDING' ? <p className="muted">Waiting for VNPAY to confirm the payment...</p> : null}
+      {canRetry ? (
+        <p>
+          <button
+            type="button"
+            className="btn"
+            disabled={paying}
+            onClick={() => {
+              setPaying(true)
+              apiRequest<{ paymentUrl: string }>(`/stores/${store.slug}/orders/${order.id}/pay`, {
+                method: 'POST',
+                body: JSON.stringify({ email: tracked?.email, returnUrl: `${location.origin}/` }),
+              }).then(
+                (r) => void (location.href = r.paymentUrl),
+                (e) => {
+                  setPaying(false)
+                  alert(e instanceof Error ? e.message : 'Could not start payment')
+                },
+              )
+            }}
+          >
+            Pay again with VNPAY
+          </button>
+        </p>
+      ) : null}
     </section>
   )
 }
